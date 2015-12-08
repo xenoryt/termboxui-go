@@ -2,35 +2,63 @@ package termui
 
 import "github.com/nsf/termbox-go"
 
-//Box creates an area that displays text
-type Box struct {
+type View struct {
 	x, y          int
 	width, height int
 
+	// Position of the "cursor"
+	cx, cy int
+
 	borders bool
 
-	Title   string
-	content string
-
-	fg, bg termbox.Attribute
+	Title string
 }
 
-func (b *Box) Origin() (x, y int)        { return }
-func (b *Box) Size() (width, height int) { return }
+func (v *View) Origin() (x, y int)        { return }
+func (v *View) Size() (width, height int) { return }
 
-// SetBorders
-func (b *Box) SetBorders(borders bool) {
-	b.borders = borders
+/*WriteRow writes the string on the row the cursor is on and then moves
+the cursor down one row. If the string exceeds width, then remaining
+characters are ignored.
+Returns EOF if cursor is outside the view.
+*/
+func (v *View) WriteRow(str []rune, fg, bg termbox.Attribute) error {
+	if v.cy > v.height {
+		return ErrEOF
+	}
+	y := v.y + v.cy
+	for i := 0; i < v.width; i++ {
+		termbox.SetCell(v.x+v.cx, y, str[i], fg, bg)
+	}
+	v.cy++
+	return nil
 }
 
-func (b *Box) SetBG(attr termbox.Attribute) {
-	b.fg = attr
-}
-func (b *Box) SetFG(attr termbox.Attribute) {
-	b.bg = attr
+/*WriteRowCell writes the row of termbox.Cell on the row the cursor is on
+and then moves the cursor down one row. If the string exceeds width, then
+remaining characters are ignored.
+Returns EOF if cursor is outside the view.
+*/
+func (v *View) WriteRowCell(row []termbox.Cell) error {
+	if v.cy > v.height {
+		return ErrEOF
+	}
+	y := v.y + v.cy
+	for i := 0; i < v.width; i++ {
+		termbox.SetCell(v.x+v.cx, y, row[i].Ch, row[i].Fg, row[i].Bg)
+	}
+	v.cy++
+	return nil
 }
 
-func (b *Box) Write(p []byte) (n int, err error) {
-	b.content = string(p[:])
-	return len(b.content), nil
+//Cursor returns the position of the cursor in the View
+func (v *View) Cursor() (cx, cy int) { return }
+
+func (v *View) MoveCursor(x, y int) {
+	v.cx += x
+	v.cy += y
+}
+func (v *View) MoveCursorTo(x, y int) {
+	v.cx = x
+	v.cy = y
 }
