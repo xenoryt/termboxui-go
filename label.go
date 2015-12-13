@@ -115,7 +115,7 @@ func (lbl *Label) Write(p []byte) (n int, err error) {
 }
 
 func (lbl Label) formatText(lines []string) (fmt [][]byte) {
-	if lines == nil {
+	if lines == nil || lbl.width == 0 {
 		return nil
 	}
 	// Initialize the buffer
@@ -141,6 +141,19 @@ func (lbl *Label) NextPage() error {
 }
 func (lbl *Label) PrevPage() error {
 	lbl.startLine -= lbl.viewHeight
+	if lbl.startLine < 0 {
+		lbl.startLine = 0
+		return io.EOF
+	}
+	return nil
+}
+
+func (lbl *Label) Scroll(amt int) error {
+	lbl.startLine += amt
+	if lbl.startLine > len(lbl.buffer) {
+		lbl.startLine = len(lbl.buffer) - 1
+		return io.EOF
+	}
 	if lbl.startLine < 0 {
 		lbl.startLine = 0
 		return io.EOF

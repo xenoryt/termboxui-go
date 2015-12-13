@@ -13,7 +13,7 @@ func Fill(x, y, w, h int, cell termbox.Cell) {
 
 //Draw a vertical line starting at point (x, y) with length h
 func DrawVertLine(x, y int, h int) {
-	for i := y + 1; i < y+h; i++ {
+	for i := y; i < y+h; i++ {
 		termbox.SetCell(x, i, '│', termbox.ColorDefault, termbox.ColorDefault)
 	}
 }

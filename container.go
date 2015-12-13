@@ -2,6 +2,7 @@ package termboxui
 
 import (
 	"errors"
+	"log"
 
 	"github.com/nsf/termbox-go"
 )
@@ -33,10 +34,11 @@ type Container interface {
 //that is not the behaviour you want.
 func NewSplit(location float32) *VSplit {
 	w, h := termbox.Size()
+	log.Printf("termbox size: %d x %d\n", w, h)
 	if location > -1 && location < 0 {
 		location = 1 - location
 	}
-	return &VSplit{x: 0, y: 0, width: w, height: h, location: location}
+	return &VSplit{x: 0, y: 0, width: w, height: h, location: location, children: make([]Window, 2)}
 }
 
 //VSplit creates a vertical divider and tiles windows
@@ -49,14 +51,47 @@ type VSplit struct {
 	location float32
 }
 
+func (s *VSplit) Move(x, y int) {
+	s.x = x
+	s.y = y
+
+	if s.children[0] != nil {
+		s.children[0].Move(x, y)
+	}
+	if s.children[1] != nil {
+		s.children[1].Move(s.getSplitLoc()+1, s.y)
+	}
+}
+
+func (s *VSplit) Resize(w, h int) {
+	s.width = w
+	s.height = h
+
+	//Resize children
+	if s.children[0] != nil {
+		s.children[0].Resize(s.width/2, s.height)
+	}
+
+	if s.children[1] != nil {
+		//need to move the second child since the location of split changed
+		s.children[1].Move(s.getSplitLoc()+1, s.y)
+		s.children[1].Resize(s.width/2, s.height)
+	}
+}
+
 //Place places the window either to the left or right of the split.
 //If both spaces are empty, it will be placed to the left.
 //If both spaces have been taken, this will return an error.
-func (s *VSplit) Place(win Window, size int) error {
+func (s *VSplit) Place(win Window) error {
+	splitx := s.getSplitLoc()
 	if s.children[0] == nil {
 		s.children[0] = win
+		win.Move(s.x, s.y)
+		win.Resize(splitx-s.x-1, s.height)
 	} else if s.children[1] == nil {
 		s.children[1] = win
+		win.Move(s.getSplitLoc()+1, s.y)
+		win.Resize(s.x+s.width-splitx, s.height)
 	} else {
 		return errors.New("VSplit container is full")
 	}
@@ -82,10 +117,10 @@ func (s *VSplit) RemoveLast() {
 	s.children[1] = nil
 }
 
-//Gets the location of the split
+//Gets the location of the split relative to the entire screen.
 func (s *VSplit) getSplitLoc() int {
 	if s.location > 0 && s.location < 1 {
-		return s.x + s.width*int(s.location)
+		return s.x + int(float32(s.width)*s.location)
 	}
 	return s.x + (s.width+int(s.location))%s.width
 }
@@ -94,6 +129,8 @@ func (s *VSplit) getSplitLoc() int {
 func (s *VSplit) Draw() {
 	DrawVertLine(s.getSplitLoc(), s.y, s.height)
 	for _, f := range s.children {
-		f.Draw()
+		if f != nil {
+			f.Draw()
+		}
 	}
 }

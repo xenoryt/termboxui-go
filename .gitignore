@@ -5,6 +5,9 @@
 *.swp
 *.swo
 
+# log files
+*log
+
 # Folders
 _obj
 _test
