@@ -26,10 +26,9 @@ func main() {
 	}
 	defer termbox.Close()
 
-	split := termboxui.NewSplit(0.5)
+	split := termboxui.NewSplit(50)
 
 	lbl := termboxui.NewLabel()
-	lbl.Move(3, 6)
 	b, err := ioutil.ReadFile("Mark.Twain-Tom.Sawyer.txt")
 	fmt.Fprintf(lbl, string(b))
 

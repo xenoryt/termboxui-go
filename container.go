@@ -67,15 +67,17 @@ func (s *VSplit) Resize(w, h int) {
 	s.width = w
 	s.height = h
 
+	splitx := s.getSplitLoc()
+
 	//Resize children
 	if s.children[0] != nil {
-		s.children[0].Resize(s.width/2, s.height)
+		s.children[0].Resize(splitx-s.x, s.height)
 	}
 
 	if s.children[1] != nil {
 		//need to move the second child since the location of split changed
 		s.children[1].Move(s.getSplitLoc()+1, s.y)
-		s.children[1].Resize(s.width/2, s.height)
+		s.children[1].Resize(s.x+s.width-splitx-1, s.height)
 	}
 }
 
@@ -91,7 +93,7 @@ func (s *VSplit) Place(win Window) error {
 	} else if s.children[1] == nil {
 		s.children[1] = win
 		win.Move(s.getSplitLoc()+1, s.y)
-		win.Resize(s.x+s.width-splitx, s.height)
+		win.Resize(s.x+s.width-splitx-1, s.height)
 	} else {
 		return errors.New("VSplit container is full")
 	}
