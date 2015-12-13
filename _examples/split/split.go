@@ -26,7 +26,9 @@ func main() {
 	}
 	defer termbox.Close()
 
-	split := termboxui.NewSplit(50)
+	split := termboxui.NewSplit(-5, termboxui.SplitHorizontal)
+	vsplit := termboxui.NewSplit(-0.25, termboxui.SplitVertical)
+	vsplit.Place(split)
 
 	lbl := termboxui.NewLabel()
 	b, err := ioutil.ReadFile("Mark.Twain-Tom.Sawyer.txt")
@@ -34,27 +36,36 @@ func main() {
 
 	split.Place(lbl)
 
+	lbl2 := termboxui.NewLabel()
+	fmt.Fprintf(lbl2, string(b))
+	vsplit.Place(lbl2)
+
 mainloop:
 	for {
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-		split.Draw()
+		vsplit.Draw()
 		termbox.Flush()
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyArrowUp:
-				lbl.Scroll(-5)
+				lbl.Scroll(-3)
 			case termbox.KeyArrowDown:
-				lbl.Scroll(5)
+				lbl.Scroll(3)
 			case termbox.KeyEsc:
 				break mainloop
 			default:
-				if ev.Ch == 'q' {
+				switch ev.Ch {
+				case 'q':
 					break mainloop
+				case '+':
+					lbl2.NextPage()
+				case '-':
+					lbl2.PrevPage()
 				}
 			}
 		case termbox.EventResize:
-			split.Resize(ev.Width, ev.Height)
+			vsplit.Resize(ev.Width, ev.Height)
 		case termbox.EventError:
 			log.Print(ev.Err)
 			panic(ev.Err)
