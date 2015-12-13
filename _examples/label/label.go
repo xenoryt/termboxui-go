@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/nsf/termbox-go"
-	"github.com/xenoryt/termui-go"
+	"github.com/xenoryt/termboxui-go"
 )
 
 func main() {
@@ -19,21 +19,25 @@ func main() {
 	log.SetOutput(f)
 
 	// Initialize termbox
-	err := termbox.Init()
+	err = termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termbox.Close()
 
 	// Create a new label at (3,3) with dimensions 18x5
-	lbl := termui.NewLabel(3, 3, 18, 5)
-	fmt.Fprintf(lbl, "Test Message! AB testing fox jumped over the fence!")
+	lbl := termboxui.NewLabel()
+	lbl.Move(3, 6)
+	lbl.Resize(50, 5)
+	fmt.Fprintf(lbl, "Test Message! AB testing fox jumped over the fence!\n ")
 	fmt.Fprintln(lbl, "Moar messages! with moar line wrapping!")
 
 mainloop:
 	for {
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 		lbl.Redraw()
+		termboxui.DrawBox(2, 5, 52, 7)
+		termboxui.DrawVertLine(60, 3, 15)
 		termbox.Flush()
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:

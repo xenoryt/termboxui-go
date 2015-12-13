@@ -1,4 +1,4 @@
-package termui
+package termboxui
 
 import (
 	"io"
@@ -6,13 +6,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/nsf/termbox-go"
-	"github.com/tonnerre/golang-text"
 )
 
 //NewLabel creates a new label
-func NewLabel(x, y, w, h int) *Label {
-	lbl := &Label{x: x, y: y}
-	lbl.Resize(w, h)
+func NewLabel() *Label {
+	lbl := &Label{x: -1, y: -1}
 	return lbl
 }
 
@@ -42,6 +40,10 @@ type Label struct {
 func (lbl Label) Origin() (x, y int)        { return }
 func (lbl Label) Size() (width, height int) { return }
 
+func (lbl *Label) Move(x, y int) {
+	lbl.x = x
+	lbl.y = y
+}
 func (lbl *Label) Resize(width, height int) {
 	lbl.width = width
 	lbl.height = height
@@ -120,7 +122,7 @@ func (lbl Label) formatText(lines []string) (fmt [][]byte) {
 	fmt = make([][]byte, 0, len(lines))
 
 	for _, curLine := range lines {
-		tmp := strings.Split(text.Wrap(curLine, lbl.viewWidth), "\n")
+		tmp := WrapText(curLine, lbl.viewWidth)
 		for _, wrappedLine := range tmp {
 			fmt = append(fmt, []byte(wrappedLine))
 		}
