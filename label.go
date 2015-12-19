@@ -19,6 +19,7 @@ type Label struct {
 	x, y          int
 	width, height int
 
+	changed    bool
 	borders    bool
 	viewHeight int
 	viewWidth  int
@@ -37,8 +38,8 @@ type Label struct {
 	fg, bg termbox.Attribute
 }
 
-func (lbl Label) Origin() (x, y int)        { return }
-func (lbl Label) Size() (width, height int) { return }
+func (lbl Label) Origin() (x, y int)        { return lbl.x, lbl.y }
+func (lbl Label) Size() (width, height int) { return lbl.width, lbl.height }
 
 func (lbl *Label) Move(x, y int) {
 	lbl.x = x
@@ -49,8 +50,7 @@ func (lbl *Label) Resize(width, height int) {
 	lbl.height = height
 	lbl.checkViewSize()
 
-	// We want to format the text so that it fits the new dimensions
-	lbl.buffer = lbl.formatText(lbl.content)
+	lbl.changed = true
 }
 
 func (lbl *Label) SetBorders(borders bool) {
@@ -73,15 +73,19 @@ func (lbl *Label) Clear() {
 	lbl.endPos = 0
 }
 
-func (lbl *Label) SetBG(attr termbox.Attribute) {
+func (lbl *Label) SetFG(attr termbox.Attribute) {
 	lbl.fg = attr
 }
-func (lbl *Label) SetFG(attr termbox.Attribute) {
+func (lbl *Label) SetBG(attr termbox.Attribute) {
 	lbl.bg = attr
 }
 
 //Draw writes the buffered text onto the screen
-func (lbl Label) Draw() {
+func (lbl *Label) Draw() {
+	if lbl.changed {
+		lbl.buffer = lbl.formatText(lbl.content)
+		lbl.changed = false
+	}
 	if lbl.buffer == nil {
 		return
 	}
@@ -101,16 +105,15 @@ func (lbl Label) Draw() {
 }
 
 //Redraw clears any previous text in the label and then perform a Draw
-func (lbl Label) Redraw() {
+func (lbl Label) Overwrite() {
 	Fill(lbl.x, lbl.y, lbl.width, lbl.height, termbox.Cell{Ch: ' '})
 	lbl.Draw()
 }
 
 //Write content to the label
 func (lbl *Label) Write(p []byte) (n int, err error) {
-	newText := strings.Split(string(p), "\n")
-	lbl.content = append(lbl.content, newText...)
-	lbl.buffer = append(lbl.buffer, lbl.formatText(newText)...)
+	lbl.content = append(lbl.content, strings.Split(string(p), "\n")...)
+	lbl.changed = true
 	return len(p), nil
 }
 
@@ -132,23 +135,17 @@ func (lbl Label) formatText(lines []string) (fmt [][]byte) {
 }
 
 func (lbl *Label) NextPage() error {
-	lbl.startLine += lbl.viewHeight
-	if lbl.startLine > len(lbl.buffer) {
-		lbl.startLine = len(lbl.buffer) - 1
-		return io.EOF
-	}
-	return nil
+	return lbl.Scroll(lbl.viewHeight)
 }
 func (lbl *Label) PrevPage() error {
-	lbl.startLine -= lbl.viewHeight
-	if lbl.startLine < 0 {
-		lbl.startLine = 0
-		return io.EOF
-	}
-	return nil
+	return lbl.Scroll(-lbl.viewHeight)
 }
 
 func (lbl *Label) Scroll(amt int) error {
+	if lbl.changed {
+		lbl.buffer = lbl.formatText(lbl.content)
+		lbl.changed = false
+	}
 	lbl.startLine += amt
 	if lbl.startLine > len(lbl.buffer) {
 		lbl.startLine = len(lbl.buffer) - 1

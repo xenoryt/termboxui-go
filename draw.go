@@ -11,6 +11,15 @@ func Fill(x, y, w, h int, cell termbox.Cell) {
 	}
 }
 
+//FillView fills a rectangular area in a View with the given cell
+func FillView(view *View, x, y, w, h int, cell termbox.Cell) {
+	for i := y; i < y+h; i++ {
+		for j := x; j < x+w; j++ {
+			view.SetCell(j, i, cell.Ch, cell.Fg, cell.Bg)
+		}
+	}
+}
+
 //Draw a vertical line starting at point (x, y) with length h
 func DrawVertLine(x, y int, h int) {
 	for i := y; i < y+h; i++ {

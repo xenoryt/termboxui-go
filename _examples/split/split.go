@@ -30,12 +30,19 @@ func main() {
 	vsplit := termboxui.NewSplit(-0.25, termboxui.SplitVertical)
 	vsplit.Place(split)
 
+	//label placed on top left
 	lbl := termboxui.NewLabel()
 	b, err := ioutil.ReadFile("Mark.Twain-Tom.Sawyer.txt")
 	fmt.Fprintf(lbl, string(b))
 
 	split.Place(lbl)
 
+	lblInstr := termboxui.NewLabel()
+	fmt.Fprint(lblInstr, "Use Up/Down arrow keys and +/- keys to scroll!")
+	lblInstr.SetFG(termbox.ColorGreen)
+	split.Place(lblInstr)
+
+	// Placed on the right
 	lbl2 := termboxui.NewLabel()
 	fmt.Fprintf(lbl2, string(b))
 	vsplit.Place(lbl2)

@@ -54,7 +54,6 @@ type Split interface {
 //that is not the behaviour you want.
 func NewSplit(location float32, sType SplitType) Split {
 	w, h := termbox.Size()
-	log.Printf("termbox size: %d x %d\n", w, h)
 	if location > -1 && location < 0 {
 		location = 1 + location
 	}
@@ -195,7 +194,7 @@ func (s *HSplit) moveChild(c int) {
 		s.children[0].Move(s.x, s.y)
 	}
 	if c&2 != 0 && s.children[1] != nil {
-		s.children[1].Move(s.y, s.GetSplitLoc()+1)
+		s.children[1].Move(s.x, s.GetSplitLoc()+1)
 	}
 }
 func (s *HSplit) resizeChild(c int) {
@@ -204,8 +203,8 @@ func (s *HSplit) resizeChild(c int) {
 		s.children[0].Resize(s.width, splity-s.y)
 	}
 	if c&2 != 0 && s.children[1] != nil {
-		s.children[1].Move(s.y, s.GetSplitLoc()+1)
-		s.children[1].Resize(s.x, s.y+s.height-splity-1)
+		s.children[1].Move(s.x, s.GetSplitLoc()+1)
+		s.children[1].Resize(s.width, s.y+s.height-splity-1)
 	}
 }
 
@@ -221,6 +220,7 @@ func (s *HSplit) Place(win Window) error {
 		s.children[1] = win
 		s.resizeChild(2) //resizing second child moves and resizes
 	} else {
+		log.Print("container full")
 		return errors.New("HSplit container is full")
 	}
 	return nil

@@ -3,6 +3,4 @@
 //encapsulate and wrap all of its functions.
 package termboxui
 
-import "errors"
-
-var ErrEOF = errors.New("EOF")
+//var ErrEOF = errors.New("EOF")
